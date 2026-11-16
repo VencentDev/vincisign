@@ -18,7 +18,6 @@ import com.vencentdev.backend.modules.todo.entity.Todo;
 import com.vencentdev.backend.modules.todo.enums.TodoStatus;
 import com.vencentdev.backend.modules.todo.repository.TodoRepository;
 import com.vencentdev.backend.modules.user.entity.User;
-import com.vencentdev.backend.modules.user.enums.KycStatus;
 import com.vencentdev.backend.modules.user.enums.Role;
 import com.vencentdev.backend.modules.user.enums.UserType;
 import com.vencentdev.backend.modules.user.repository.UserRepository;
@@ -254,7 +253,6 @@ class TodoControllerIntegrationTest extends IntegrationTestBase {
         .displayName(externalId)
         .role(Role.USER)
         .userType(UserType.INDIVIDUAL)
-        .kycStatus(KycStatus.NONE)
         .build();
   }
 }

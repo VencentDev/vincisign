@@ -1,7 +1,8 @@
 package com.vencentdev.backend.modules.user.entity;
 
 import com.vencentdev.backend.common.persistence.AuditableEntity;
-import com.vencentdev.backend.modules.user.enums.KycStatus;
+import com.vencentdev.backend.modules.user.enums.ContactVerificationStatus;
+import com.vencentdev.backend.modules.user.enums.IdentityLevel;
 import com.vencentdev.backend.modules.user.enums.Role;
 import com.vencentdev.backend.modules.user.enums.UserType;
 import jakarta.persistence.Column;
@@ -12,6 +13,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import java.time.Instant;
 import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -53,7 +55,17 @@ public class User extends AuditableEntity {
   @Column(name = "user_type", nullable = false)
   private UserType userType;
 
+  @Builder.Default
   @Enumerated(EnumType.STRING)
-  @Column(name = "kyc_status", nullable = false)
-  private KycStatus kycStatus;
+  @Column(name = "identity_level", nullable = false, length = 2)
+  private IdentityLevel identityLevel = IdentityLevel.I0;
+
+  @Builder.Default
+  @Enumerated(EnumType.STRING)
+  @Column(name = "contact_verification_status", nullable = false, length = 32)
+  private ContactVerificationStatus contactVerificationStatus =
+      ContactVerificationStatus.UNVERIFIED;
+
+  @Column(name = "contact_verified_at")
+  private Instant contactVerifiedAt;
 }

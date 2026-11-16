@@ -1,8 +1,9 @@
 package com.vencentdev.backend.modules.user.enums;
 
-public enum KycStatus {
-  NONE,
+public enum ContactVerificationStatus {
+  UNVERIFIED,
   PENDING,
   VERIFIED,
-  REJECTED
+  EXPIRED,
+  REVOKED
 }
