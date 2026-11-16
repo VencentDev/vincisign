@@ -46,6 +46,10 @@ public class AuthSession {
   @Column(name = "revoked_at")
   private Instant revokedAt;
 
+  public void revoke(Instant revokedAt) {
+    this.revokedAt = revokedAt;
+  }
+
   @PrePersist
   void ensureCreatedAt() {
     if (createdAt == null) {

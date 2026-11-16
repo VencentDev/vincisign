@@ -20,6 +20,8 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 @Component
 public class AuthRateLimitFilter extends OncePerRequestFilter {
+  private static final int MAX_BUCKETS = 10_000;
+
   private final AuthRateLimitProperties properties;
   private final Clock clock;
   private final Map<String, TokenBucket> buckets = new ConcurrentHashMap<>();
@@ -43,16 +45,10 @@ public class AuthRateLimitFilter extends OncePerRequestFilter {
       return;
     }
 
-    TokenBucket bucket =
-        buckets.computeIfAbsent(
-            clientKey(request),
-            ignored ->
-                new TokenBucket(
-                    properties.getCapacity(),
-                    properties.getRefillPeriod().toMillis(),
-                    clock.millis()));
+    long nowMillis = clock.millis();
+    TokenBucket bucket = bucketFor(request, nowMillis);
 
-    if (bucket.tryConsume(clock.millis())) {
+    if (bucket.tryConsume(nowMillis)) {
       filterChain.doFilter(request, response);
       return;
     }
@@ -67,6 +63,27 @@ public class AuthRateLimitFilter extends OncePerRequestFilter {
             {"status":429,"code":"RATE_LIMITED","message":"Too many requests","traceId":%s,"timestamp":"%s","errors":[]}
             """
                 .formatted(jsonStringOrNull(MDC.get("traceId")), Instant.now(clock)));
+  }
+
+  private TokenBucket bucketFor(HttpServletRequest request, long nowMillis) {
+    String key = clientKey(request);
+    TokenBucket existing = buckets.get(key);
+    if (existing != null) {
+      return existing;
+    }
+
+    if (buckets.size() >= MAX_BUCKETS) {
+      buckets.entrySet().removeIf(entry -> entry.getValue().isIdle(nowMillis));
+    }
+    if (buckets.size() >= MAX_BUCKETS) {
+      key = "overflow";
+    }
+
+    return buckets.computeIfAbsent(
+        key,
+        ignored ->
+            new TokenBucket(
+                properties.getCapacity(), properties.getRefillPeriod().toMillis(), nowMillis));
   }
 
   private boolean isLimitedEndpoint(HttpServletRequest request) {
@@ -116,6 +133,11 @@ public class AuthRateLimitFilter extends OncePerRequestFilter {
 
       tokens--;
       return true;
+    }
+
+    private synchronized boolean isIdle(long nowMillis) {
+      refillIfNeeded(nowMillis);
+      return tokens == capacity;
     }
 
     private void refillIfNeeded(long nowMillis) {

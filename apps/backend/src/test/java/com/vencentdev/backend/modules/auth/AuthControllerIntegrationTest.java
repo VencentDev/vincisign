@@ -60,6 +60,7 @@ class AuthControllerIntegrationTest extends IntegrationTestBase {
             .getContentAsString();
 
     String accessToken = objectMapper.readTree(response).get("accessToken").asText();
+    org.assertj.core.api.Assertions.assertThat(accessToken).startsWith("vs_");
 
     mockMvc
         .perform(get("/api/v1/auth/me").header("Authorization", "Bearer " + accessToken))
@@ -128,6 +129,50 @@ class AuthControllerIntegrationTest extends IntegrationTestBase {
     mockMvc
         .perform(post("/api/v1/auth/signup").contentType(MediaType.APPLICATION_JSON).content(body))
         .andExpect(status().isConflict());
+  }
+
+  @Test
+  void logoutRevokesLocalSession() throws Exception {
+    String email = "logout-" + java.util.UUID.randomUUID() + "@example.com";
+    String response =
+        mockMvc
+            .perform(
+                post("/api/v1/auth/signup")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(
+                        """
+                        {"email":"%s","password":"correct horse battery staple","displayName":"Logout User"}
+                        """
+                            .formatted(email)))
+            .andExpect(status().isCreated())
+            .andReturn()
+            .getResponse()
+            .getContentAsString();
+    String accessToken = objectMapper.readTree(response).get("accessToken").asText();
+
+    mockMvc
+        .perform(post("/api/v1/auth/logout").header("Authorization", "Bearer " + accessToken))
+        .andExpect(status().isNoContent());
+    mockMvc
+        .perform(get("/api/v1/auth/me").header("Authorization", "Bearer " + accessToken))
+        .andExpect(status().isUnauthorized());
+  }
+
+  @Test
+  void signupAcceptsMaximumLengthPassword() throws Exception {
+    String email = "long-password-" + java.util.UUID.randomUUID() + "@example.com";
+    String password = "a".repeat(128);
+
+    mockMvc
+        .perform(
+            post("/api/v1/auth/signup")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(
+                    """
+                    {"email":"%s","password":"%s","displayName":"Long Password User"}
+                    """
+                        .formatted(email, password)))
+        .andExpect(status().isCreated());
   }
 
   @Test

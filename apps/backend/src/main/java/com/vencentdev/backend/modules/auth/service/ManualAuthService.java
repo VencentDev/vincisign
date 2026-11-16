@@ -35,6 +35,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class ManualAuthService {
 
   private static final String LOCAL_EXTERNAL_ID_PREFIX = "local:";
+  private static final String MANUAL_TOKEN_PREFIX = "vs_";
 
   private final UserRepository users;
   private final AuthSessionRepository sessions;
@@ -81,7 +82,7 @@ public class ManualAuthService {
             .externalId(LOCAL_EXTERNAL_ID_PREFIX + UUID.randomUUID())
             .email(email)
             .displayName(request.displayName().trim())
-            .passwordHash(passwordEncoder.encode(request.password()))
+            .passwordHash(encodePassword(request.password()))
             .role(Role.USER)
             .userType(UserType.INDIVIDUAL)
             .identityLevel(IdentityLevel.I0)
@@ -100,7 +101,8 @@ public class ManualAuthService {
             .filter(candidate -> candidate.getPasswordHash() != null)
             .filter(
                 candidate ->
-                    passwordEncoder.matches(request.password(), candidate.getPasswordHash()))
+                    passwordEncoder.matches(
+                        passwordDigest(request.password()), candidate.getPasswordHash()))
             .orElseThrow(() -> new BadCredentialsException("Invalid email or password"));
 
     return issueToken(user);
@@ -124,6 +126,17 @@ public class ManualAuthService {
         .orElse(null);
   }
 
+  public boolean isManualSessionToken(String accessToken) {
+    return accessToken.startsWith(MANUAL_TOKEN_PREFIX);
+  }
+
+  @Transactional
+  public void revokeSession(String accessToken) {
+    sessions
+        .findByTokenHash(sha256(accessToken))
+        .ifPresent(session -> session.revoke(clock.instant()));
+  }
+
   private AuthTokenResponse issueToken(User user) {
     String accessToken = generateToken();
     Instant expiresAt = clock.instant().plus(sessionProperties.getSessionTtl());
@@ -139,7 +152,16 @@ public class ManualAuthService {
   private String generateToken() {
     byte[] tokenBytes = new byte[32];
     secureRandom.nextBytes(tokenBytes);
-    return Base64.getUrlEncoder().withoutPadding().encodeToString(tokenBytes);
+    return MANUAL_TOKEN_PREFIX
+        + Base64.getUrlEncoder().withoutPadding().encodeToString(tokenBytes);
+  }
+
+  private String encodePassword(String password) {
+    return passwordEncoder.encode(passwordDigest(password));
+  }
+
+  private String passwordDigest(String password) {
+    return sha256(password);
   }
 
   private String normalizeEmail(String email) {

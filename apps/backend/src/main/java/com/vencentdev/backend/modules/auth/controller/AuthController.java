@@ -8,7 +8,9 @@ import com.vencentdev.backend.modules.auth.dto.ManualSignupRequest;
 import com.vencentdev.backend.modules.auth.service.ManualAuthService;
 import com.vencentdev.backend.modules.user.dto.UserResponse;
 import com.vencentdev.backend.modules.user.service.UserService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -38,6 +40,18 @@ public class AuthController {
   @PostMapping("/login")
   public AuthTokenResponse login(@Valid @RequestBody ManualLoginRequest request) {
     return manualAuth.login(request);
+  }
+
+  @PostMapping("/logout")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  public void logout(HttpServletRequest request) {
+    String authorization = request.getHeader(HttpHeaders.AUTHORIZATION);
+    if (authorization != null && authorization.startsWith("Bearer ")) {
+      String accessToken = authorization.substring("Bearer ".length()).trim();
+      if (!accessToken.isEmpty()) {
+        manualAuth.revokeSession(accessToken);
+      }
+    }
   }
 
   @GetMapping("/me")

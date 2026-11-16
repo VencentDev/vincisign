@@ -37,12 +37,13 @@ public class OAuthProviderAuthenticationFilter extends OncePerRequestFilter {
       return;
     }
 
+    boolean manualSessionToken = manualAuthService.isManualSessionToken(accessToken);
     AuthenticatedUser user = manualAuthService.resolveSession(accessToken);
-    if (user == null) {
+    if (user == null && !manualSessionToken) {
       user = userInfoClient.resolve(accessToken);
     }
     if (user == null) {
-      response.sendError(HttpStatus.UNAUTHORIZED.value(), "Invalid OAuth access token");
+      response.sendError(HttpStatus.UNAUTHORIZED.value(), "Invalid access token");
       return;
     }
 

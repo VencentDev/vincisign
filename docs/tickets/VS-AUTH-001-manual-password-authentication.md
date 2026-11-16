@@ -18,11 +18,13 @@ Allow a user to create an account and sign in with email and password while pres
 - Added configurable 30-day session expiry through `APP_AUTH_SESSION_TTL`.
 - Added authentication rate limiting to signup and login requests.
 - Added local-session resolution to the existing bearer-token filter.
+- Added local session revocation on logout.
 - Added Auth.js Credentials authentication to the web application.
 - Made the existing login and signup forms submit to the API.
 - Preserved Google login and made GitHub conditional on configured credentials.
 - Added OpenAPI paths and generated API types.
 - Added integration coverage for signup, login, invalid credentials, duplicate email, password hashing, and authenticated `/me` access.
+- Passwords are SHA-256 digested before BCrypt so the API accepts the documented 128-character maximum without BCrypt truncation.
 
 ## Account defaults
 
@@ -76,6 +78,7 @@ Authorization: Bearer <accessToken>
 - [x] Correct credentials issue an authenticated session token.
 - [x] Incorrect credentials return `401 Unauthorized`.
 - [x] A local session can access protected endpoints.
+- [x] Logout revokes a local session.
 - [x] Sessions expire according to configuration.
 - [x] Google OAuth remains available.
 - [x] Missing GitHub credentials do not prevent the frontend from starting.
