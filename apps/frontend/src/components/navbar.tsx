@@ -21,6 +21,9 @@ export async function Navbar() {
               <Button asChild variant="ghost" size="sm">
                 <Link href="/todos">Dashboard</Link>
               </Button>
+              <Button asChild variant="ghost" size="sm">
+                <Link href="/organizations">Organizations</Link>
+              </Button>
               <SignOutButton />
             </>
           ) : (
