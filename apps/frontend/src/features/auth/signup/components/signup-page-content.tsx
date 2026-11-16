@@ -32,11 +32,11 @@ function SignupShell({ callbackUrl }: { callbackUrl?: string }) {
           <form className="w-full space-y-6" onSubmit={(event) => event.preventDefault()}>
             <div className="space-y-2">
               <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-accent-alt">
-                Identity seed
+                Workspace setup
               </p>
               <h1 className="text-3xl font-bold tracking-tight">Create account</h1>
               <p className="text-sm text-muted-foreground">
-                Initialize a local profile or continue through your provider identity.
+                Create your account to send, sign, and verify documents.
               </p>
             </div>
 
@@ -84,14 +84,14 @@ function SignupShell({ callbackUrl }: { callbackUrl?: string }) {
               type="submit"
               className="w-full rounded-lg bg-gradient-to-r from-accent to-accent-alt py-2.5 font-semibold text-white transition-all duration-300 hover:opacity-90 hover:shadow-lg hover:shadow-accent/20 active:scale-[0.98]"
             >
-              Generate Identity
+              Create account
             </button>
 
             <AuthDivider label="Or continue with" />
             <OAuthButtons callbackUrl={callbackUrl} />
 
             <p className="text-center text-sm text-muted-foreground">
-              Already have a key?{' '}
+              Already have an account?{' '}
               <Link
                 href="/login"
                 className="text-accent-alt underline-offset-4 transition-colors hover:text-accent hover:underline decoration-accent-alt/40"
@@ -104,7 +104,7 @@ function SignupShell({ callbackUrl }: { callbackUrl?: string }) {
         <AuroraPanel
           variant="signup"
           title={`${siteConfig.name} Identity`}
-          subtitle="Initialize access"
+          subtitle="Start signing securely"
         />
       </section>
     </main>

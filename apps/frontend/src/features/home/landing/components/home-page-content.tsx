@@ -15,10 +15,10 @@ export function HomePageContent() {
         </p>
         <div className="space-y-4">
           <h1 className="text-balance text-4xl font-bold tracking-tight md:text-5xl">
-            Build and Deploy
+            Sign with confidence
           </h1>
           <p className="mx-auto max-w-md text-sm leading-6 text-muted-foreground">
-            A ready template for provider-backed authentication and focused application access.
+            Embed secure document signing, evidence, and verification into the products you already use.
           </p>
         </div>
         <div className="flex flex-col gap-3 sm:flex-row">
@@ -26,7 +26,7 @@ export function HomePageContent() {
             href="/login"
             className="rounded-lg bg-foreground px-5 py-2.5 text-sm font-semibold text-background shadow-lg shadow-foreground/5 transition-all duration-300 hover:bg-foreground/90 hover:shadow-foreground/15 active:scale-[0.98]"
           >
-            Sign in
+            Open dashboard
           </Link>
           <Link
             href="/signup"

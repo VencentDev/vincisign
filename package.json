@@ -4,6 +4,9 @@
   "packageManager": "pnpm@10.12.1",
   "scripts": {
     "build": "turbo run build",
+    "check:format": "prettier --check README.md AGENTS.md implementation-plan.md 'docs/**/*.md' '.github/workflows/**/*.yml' 'apps/frontend/**/*.{ts,tsx,js,jsx}' 'packages/api-types/src/**/*.{ts,js,json}' 'packages/api-types/openapi.json' 'package.json' 'turbo.json'",
+    "check:contracts": "pnpm --filter @app/api-types check:generated",
+    "check:product": "pnpm check:format && pnpm check:contracts",
     "dev": "turbo run dev",
     "format": "prettier --write . && pnpm --filter @app/backend format",
     "generate:types": "turbo run generate:types",
