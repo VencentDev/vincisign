@@ -1,5 +1,7 @@
 package com.vencentdev.backend.common.exception;
 
+import com.vencentdev.backend.modules.document.storage.DocumentStorageException;
+import com.vencentdev.backend.modules.document.validation.DocumentUploadException;
 import jakarta.validation.ConstraintViolationException;
 import java.time.Instant;
 import java.util.List;
@@ -13,6 +15,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 @RestControllerAdvice
@@ -53,6 +56,27 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(BadRequestException.class)
   ResponseEntity<ApiError> handleBadRequest(BadRequestException exception) {
     return error(HttpStatus.BAD_REQUEST, "BAD_REQUEST", exception.getMessage(), List.of());
+  }
+
+  @ExceptionHandler(DocumentUploadException.class)
+  ResponseEntity<ApiError> handleDocumentUpload(DocumentUploadException exception) {
+    return error(
+        HttpStatus.BAD_REQUEST, exception.getPolicyCode(), exception.getMessage(), List.of());
+  }
+
+  @ExceptionHandler(DocumentStorageException.class)
+  ResponseEntity<ApiError> handleDocumentStorage(DocumentStorageException exception) {
+    return error(
+        HttpStatus.SERVICE_UNAVAILABLE, exception.getCode(), exception.getMessage(), List.of());
+  }
+
+  @ExceptionHandler(MaxUploadSizeExceededException.class)
+  ResponseEntity<ApiError> handleMaxUploadSize(MaxUploadSizeExceededException exception) {
+    return error(
+        HttpStatus.BAD_REQUEST,
+        "FILE_TOO_LARGE",
+        "This file exceeds the allowed upload size.",
+        List.of());
   }
 
   @ExceptionHandler(ForbiddenException.class)

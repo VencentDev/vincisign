@@ -11,6 +11,10 @@ spring:
     hibernate:
       ddl-auto: validate
     open-in-view: false
+  servlet:
+    multipart:
+      max-file-size: ${APP_DOCUMENT_UPLOAD_REQUEST_MAX_FILE_SIZE:30MB}
+      max-request-size: ${APP_DOCUMENT_UPLOAD_REQUEST_MAX_SIZE:30MB}
 server:
   port: ${SERVER_PORT:8080}
 
@@ -30,6 +34,9 @@ app:
       service-role-key: ${SUPABASE_SERVICE_ROLE_KEY:}
       bucket: ${SUPABASE_STORAGE_BUCKET:vincisign-documents}
       signed-download-url-ttl: ${SUPABASE_STORAGE_SIGNED_URL_TTL_SECONDS:300s}
+  document:
+    upload:
+      max-file-size: ${APP_DOCUMENT_UPLOAD_MAX_FILE_SIZE:25MB}
 
 management:
   endpoints:
