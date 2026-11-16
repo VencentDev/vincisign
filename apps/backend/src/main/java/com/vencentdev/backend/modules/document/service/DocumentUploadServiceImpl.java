@@ -31,6 +31,7 @@ public class DocumentUploadServiceImpl implements DocumentUploadService {
   private final ProjectRepository projects;
   private final DocumentRepository documents;
   private final DocumentVersionService versions;
+  private final DocumentFingerprintService fingerprints;
   private final UserService users;
   private final ObjectProvider<DocumentStorage> storageProvider;
   private final DocumentFileValidator validator;
@@ -39,12 +40,14 @@ public class DocumentUploadServiceImpl implements DocumentUploadService {
       ProjectRepository projects,
       DocumentRepository documents,
       DocumentVersionService versions,
+      DocumentFingerprintService fingerprints,
       UserService users,
       ObjectProvider<DocumentStorage> storageProvider,
       DocumentFileValidator validator) {
     this.projects = projects;
     this.documents = documents;
     this.versions = versions;
+    this.fingerprints = fingerprints;
     this.users = users;
     this.storageProvider = storageProvider;
     this.validator = validator;
@@ -64,6 +67,7 @@ public class DocumentUploadServiceImpl implements DocumentUploadService {
     }
 
     DocumentFileValidator.ValidatedDocument validated = validator.validate(uploadedFile);
+    String fingerprint = fingerprints.sha256(validated.content());
     DocumentStorage storage = storageProvider.getIfAvailable();
     if (storage == null) {
       throw DocumentStorageException.forOperation(
@@ -94,6 +98,7 @@ public class DocumentUploadServiceImpl implements DocumentUploadService {
                   .sizeBytes(stored.sizeBytes())
                   .storageBucket(stored.bucket())
                   .storageObjectKey(stored.objectKey())
+                  .fingerprint(fingerprint)
                   .createdByUserId(callerUserId)
                   .build());
 
@@ -103,6 +108,7 @@ public class DocumentUploadServiceImpl implements DocumentUploadService {
           version.getOriginalFileName(),
           version.getMediaType(),
           version.getSizeBytes(),
+          version.getFingerprint(),
           version.getStatus(),
           project.getPolicyId(),
           project.getPolicyVersion());

@@ -27,6 +27,7 @@ import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -39,6 +40,7 @@ class DocumentUploadServiceTest {
   @Mock private ProjectRepository projects;
   @Mock private DocumentRepository documents;
   @Mock private DocumentVersionService versions;
+  @Mock private DocumentFingerprintService fingerprints;
   @Mock private UserService users;
   @Mock private ObjectProvider<DocumentStorage> storageProvider;
   @Mock private DocumentStorage storage;
@@ -56,7 +58,7 @@ class DocumentUploadServiceTest {
   void setUp() {
     service =
         new DocumentUploadServiceImpl(
-            projects, documents, versions, users, storageProvider, validator);
+            projects, documents, versions, fingerprints, users, storageProvider, validator);
     projectId = UUID.randomUUID();
     userId = UUID.randomUUID();
     principal = new AuthenticatedUser("external-user", "owner@example.com", "Owner", Set.of());
@@ -96,11 +98,14 @@ class DocumentUploadServiceTest {
             .originalFileName("signed.pdf")
             .mediaType("application/pdf")
             .sizeBytes(3)
+            .fingerprint("039058c6f2c0cb492c533b0a4d14ef77cc0f78abccced5287d84a1a2011cfb81")
             .status(DocumentVersionStatus.READY)
             .build();
+    String fingerprint = version.getFingerprint();
     when(users.resolveInternalId(principal)).thenReturn(userId);
     when(projects.findById(projectId)).thenReturn(Optional.of(project));
     when(validator.validate(uploadedFile)).thenReturn(validated);
+    when(fingerprints.sha256(any(byte[].class))).thenReturn(fingerprint);
     when(storageProvider.getIfAvailable()).thenReturn(storage);
     when(storage.store(any())).thenReturn(stored);
     when(documents.saveAndFlush(any(Document.class))).thenReturn(document);
@@ -111,7 +116,15 @@ class DocumentUploadServiceTest {
 
     assertThat(response.documentId()).isEqualTo(document.getId());
     assertThat(response.documentVersionId()).isEqualTo(version.getId());
+    assertThat(response.fingerprint()).isEqualTo(fingerprint);
     assertThat(response.status()).isEqualTo(DocumentVersionStatus.READY);
+    ArgumentCaptor<byte[]> contentCaptor = ArgumentCaptor.forClass(byte[].class);
+    verify(fingerprints).sha256(contentCaptor.capture());
+    assertThat(contentCaptor.getValue()).containsExactly(validated.content());
+    ArgumentCaptor<DocumentVersion> versionCaptor = ArgumentCaptor.forClass(DocumentVersion.class);
+    verify(versions).createInitialVersion(any(Document.class), versionCaptor.capture());
+    assertThat(versionCaptor.getValue().getFingerprint()).isEqualTo(fingerprint);
+    assertThat(versionCaptor.getValue().getFingerprintAlgorithm()).isEqualTo("SHA-256");
     verify(storage).store(any());
     verify(storage, never()).delete(any());
     InOrder order = inOrder(storage, documents, versions);
@@ -140,6 +153,7 @@ class DocumentUploadServiceTest {
     when(users.resolveInternalId(principal)).thenReturn(userId);
     when(projects.findById(projectId)).thenReturn(Optional.of(project));
     when(validator.validate(uploadedFile)).thenReturn(validated);
+    when(fingerprints.sha256(any(byte[].class))).thenReturn("fingerprint");
     when(storageProvider.getIfAvailable()).thenReturn(storage);
     when(storage.store(any())).thenReturn(stored);
     when(documents.saveAndFlush(any(Document.class)))
