@@ -9,7 +9,6 @@ import static org.mockito.Mockito.when;
 import com.vencentdev.backend.modules.auth.AuthenticatedUser;
 import com.vencentdev.backend.modules.user.dto.UserUpdateRequest;
 import com.vencentdev.backend.modules.user.entity.User;
-import com.vencentdev.backend.modules.user.enums.KycStatus;
 import com.vencentdev.backend.modules.user.enums.Role;
 import com.vencentdev.backend.modules.user.enums.UserType;
 import com.vencentdev.backend.modules.user.mapper.UserMapperImpl;
@@ -75,7 +74,6 @@ class UserServiceTest {
         .displayName(displayName)
         .role(Role.USER)
         .userType(UserType.INDIVIDUAL)
-        .kycStatus(KycStatus.NONE)
         .build();
   }
 }

@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.vencentdev.backend.IntegrationTestBase;
 import com.vencentdev.backend.modules.user.entity.User;
-import com.vencentdev.backend.modules.user.enums.KycStatus;
 import com.vencentdev.backend.modules.user.enums.Role;
 import com.vencentdev.backend.modules.user.enums.UserType;
 import org.junit.jupiter.api.BeforeEach;
@@ -42,7 +41,6 @@ class UserRepositoryTest extends IntegrationTestBase {
         .displayName("User")
         .role(Role.USER)
         .userType(UserType.INDIVIDUAL)
-        .kycStatus(KycStatus.NONE)
         .build();
   }
 }

@@ -9,7 +9,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.vencentdev.backend.IntegrationTestBase;
 import com.vencentdev.backend.modules.user.entity.User;
-import com.vencentdev.backend.modules.user.enums.KycStatus;
 import com.vencentdev.backend.modules.user.enums.Role;
 import com.vencentdev.backend.modules.user.enums.UserType;
 import com.vencentdev.backend.modules.user.repository.UserRepository;
@@ -38,6 +37,18 @@ class UserControllerIntegrationTest extends IntegrationTestBase {
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.email").value("old@example.com"))
         .andExpect(jsonPath("$.displayName").value("Old Name"));
+  }
+
+  @Test
+  void accountProfileExposesSeparateIdentityAndContactStates() throws Exception {
+    repository.save(user("subject-account", "account@example.com", "Account Name"));
+
+    mockMvc
+        .perform(get("/api/v1/accounts/me").with(currentUser("subject-account")))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.identityLevel").value("I0"))
+        .andExpect(jsonPath("$.contactVerificationStatus").value("UNVERIFIED"))
+        .andExpect(jsonPath("$.contactVerifiedAt").value(nullValue()));
   }
 
   @Test
@@ -120,7 +131,6 @@ class UserControllerIntegrationTest extends IntegrationTestBase {
         .displayName(displayName)
         .role(Role.USER)
         .userType(UserType.INDIVIDUAL)
-        .kycStatus(KycStatus.NONE)
         .build();
   }
 }

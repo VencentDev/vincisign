@@ -5,7 +5,8 @@ import com.vencentdev.backend.modules.auth.AuthenticatedUser;
 import com.vencentdev.backend.modules.user.dto.UserResponse;
 import com.vencentdev.backend.modules.user.dto.UserUpdateRequest;
 import com.vencentdev.backend.modules.user.entity.User;
-import com.vencentdev.backend.modules.user.enums.KycStatus;
+import com.vencentdev.backend.modules.user.enums.ContactVerificationStatus;
+import com.vencentdev.backend.modules.user.enums.IdentityLevel;
 import com.vencentdev.backend.modules.user.enums.Role;
 import com.vencentdev.backend.modules.user.enums.UserType;
 import com.vencentdev.backend.modules.user.mapper.UserMapper;
@@ -70,7 +71,8 @@ public class UserServiceImpl implements UserService {
         .displayName(principal.displayName())
         .role(Role.USER)
         .userType(UserType.INDIVIDUAL)
-        .kycStatus(KycStatus.NONE)
+        .identityLevel(IdentityLevel.I0)
+        .contactVerificationStatus(ContactVerificationStatus.UNVERIFIED)
         .build();
   }
 }

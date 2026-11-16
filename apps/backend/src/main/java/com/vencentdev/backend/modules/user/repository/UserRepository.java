@@ -8,5 +8,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface UserRepository extends JpaRepository<User, UUID> {
   Optional<User> findByExternalId(String externalId);
 
+  Optional<User> findById(UUID id);
+
+  Optional<User> findByEmailIgnoreCase(String email);
+
   boolean existsByEmail(String email);
 }
