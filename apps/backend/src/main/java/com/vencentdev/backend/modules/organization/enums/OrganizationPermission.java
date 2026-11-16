@@ -1,0 +1,15 @@
+package com.vencentdev.backend.modules.organization.enums;
+
+public enum OrganizationPermission {
+  ORGANIZATION_VIEW,
+  ORGANIZATION_MANAGE,
+  WORKSPACE_VIEW,
+  WORKSPACE_MANAGE,
+  MEMBERSHIP_VIEW,
+  MEMBERSHIP_MANAGE,
+  PROJECT_CREATE,
+  PROJECT_VIEW,
+  PROJECT_SEND,
+  AUDIT_VIEW,
+  API_CLIENT_MANAGE
+}
