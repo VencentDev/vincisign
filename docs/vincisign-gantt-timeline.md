@@ -364,7 +364,8 @@ Suggested labels: `product`, `legal`, `backend`, `frontend`, `platform`, `securi
 
 #### VS-FND-004 — Build onboarding, consent, and account explanation flow
 
-- **Owner:** Web + Backend + Legal/Compliance
+- **Ticket record:** [`docs/tickets/VS-FND-004-onboarding-consent.md`](tickets/VS-FND-004-onboarding-consent.md)
+- **Owner:** Web + Backend
 - **Window:** S06–S07 / 2027-01-25 – 2027-02-19
 - **Estimate:** 8 days
 - **Dependencies:** VS-P0-005, VS-FND-001, VS-FND-002

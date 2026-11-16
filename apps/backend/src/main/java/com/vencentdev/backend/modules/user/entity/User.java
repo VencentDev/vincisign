@@ -71,4 +71,7 @@ public class User extends AuditableEntity {
 
   @Column(name = "contact_verified_at")
   private Instant contactVerifiedAt;
+
+  @Column(name = "onboarding_completed_at")
+  private Instant onboardingCompletedAt;
 }

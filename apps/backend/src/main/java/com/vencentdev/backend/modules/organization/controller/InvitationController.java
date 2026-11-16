@@ -6,6 +6,7 @@ import com.vencentdev.backend.modules.organization.dto.AcceptInvitationRequest;
 import com.vencentdev.backend.modules.organization.dto.MembershipResponse;
 import com.vencentdev.backend.modules.organization.service.OrganizationService;
 import jakarta.validation.Valid;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1/invitations")
+@PreAuthorize("@onboardingAccessGuard.isComplete(authentication)")
 public class InvitationController {
 
   private final OrganizationService organizations;

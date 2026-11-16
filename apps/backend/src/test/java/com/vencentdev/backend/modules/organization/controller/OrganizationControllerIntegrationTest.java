@@ -17,6 +17,16 @@ import com.vencentdev.backend.modules.organization.repository.OrganizationMember
 import com.vencentdev.backend.modules.organization.repository.OrganizationRepository;
 import com.vencentdev.backend.modules.organization.repository.WorkspaceMembershipRepository;
 import com.vencentdev.backend.modules.organization.repository.WorkspaceRepository;
+import com.vencentdev.backend.modules.onboarding.entity.ConsentRecord;
+import com.vencentdev.backend.modules.onboarding.enums.ConsentStatus;
+import com.vencentdev.backend.modules.onboarding.repository.ConsentRecordRepository;
+import com.vencentdev.backend.modules.onboarding.service.OnboardingPolicyCatalog;
+import com.vencentdev.backend.modules.user.entity.User;
+import com.vencentdev.backend.modules.user.enums.ContactVerificationStatus;
+import com.vencentdev.backend.modules.user.enums.IdentityLevel;
+import com.vencentdev.backend.modules.user.enums.Role;
+import com.vencentdev.backend.modules.user.enums.UserType;
+import com.vencentdev.backend.modules.user.repository.UserRepository;
 import java.time.Instant;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -34,6 +44,8 @@ class OrganizationControllerIntegrationTest extends IntegrationTestBase {
   @Autowired private OrganizationMembershipRepository organizationMemberships;
   @Autowired private WorkspaceMembershipRepository workspaceMemberships;
   @Autowired private MembershipInvitationRepository invitations;
+  @Autowired private UserRepository users;
+  @Autowired private ConsentRecordRepository consentRecords;
 
   private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -490,6 +502,7 @@ class OrganizationControllerIntegrationTest extends IntegrationTestBase {
   private org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors
           .JwtRequestPostProcessor
       currentUser(String subject) {
+    ensureOnboarded(subject);
     return jwt()
         .jwt(
             token ->
@@ -497,5 +510,45 @@ class OrganizationControllerIntegrationTest extends IntegrationTestBase {
                     .subject(subject)
                     .claim("email", subject + "@example.com")
                     .claim("name", subject));
+  }
+
+  private void ensureOnboarded(String subject) {
+    User account =
+        users
+            .findByExternalId(subject)
+            .orElseGet(
+                () ->
+                    users.save(
+                        User.builder()
+                            .externalId(subject)
+                            .email(subject + "@example.com")
+                            .displayName(subject)
+                            .role(Role.USER)
+                            .userType(UserType.INDIVIDUAL)
+                            .identityLevel(IdentityLevel.I0)
+                            .contactVerificationStatus(ContactVerificationStatus.UNVERIFIED)
+                            .build()));
+    if (account.getOnboardingCompletedAt() != null) {
+      return;
+    }
+
+    Instant decidedAt = Instant.now();
+    OnboardingPolicyCatalog.required()
+        .forEach(
+            policy ->
+                consentRecords.save(
+                    ConsentRecord.builder()
+                        .userId(account.getId())
+                        .consentType(policy.type())
+                        .policyId(policy.policyId())
+                        .policyVersion(policy.policyVersion())
+                        .policyReference(policy.policyReference())
+                        .consentText(policy.description())
+                        .status(ConsentStatus.ACCEPTED)
+                        .decidedAt(decidedAt)
+                        .actorUserId(account.getId())
+                        .build()));
+    account.setOnboardingCompletedAt(decidedAt);
+    users.save(account);
   }
 }
