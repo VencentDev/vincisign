@@ -11,6 +11,7 @@
   },
   "scripts": {
     "build": "pnpm generate:types",
+    "check:generated": "pnpm generate:types && test -s dist/index.d.ts",
     "fetch:spec": "curl -sf http://localhost:8080/v3/api-docs -o ./openapi.json",
     "generate:types": "openapi-typescript ./openapi.json --output ./dist/index.d.ts",
     "lint": "echo \"api-types has no lint target\"",

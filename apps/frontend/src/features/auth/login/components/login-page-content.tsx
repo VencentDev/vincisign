@@ -31,17 +31,17 @@ function LoginShell({ callbackUrl }: { callbackUrl?: string }) {
         <AuroraPanel
           variant="login"
           title={siteConfig.name}
-          subtitle="Signal access through the neural substrate."
+          subtitle="Secure access to your signing workspace."
         />
         <div className="flex flex-1 items-center p-8 md:p-12">
           <form className="w-full space-y-6" onSubmit={(event) => event.preventDefault()}>
             <div className="space-y-2">
               <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-accent-alt">
-                Secure channel
+                Signing workspace
               </p>
               <h1 className="text-3xl font-bold tracking-tight">Sign in</h1>
               <p className="text-sm text-muted-foreground">
-                Enter your credentials or continue with a connected provider.
+                Sign in to manage documents, participants, and evidence.
               </p>
             </div>
 

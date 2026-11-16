@@ -1,112 +1,75 @@
-# Todo App Monorepo
+# VinciSign
 
-## Project Overview
+VinciSign is an API-first signing platform for creating, sending, signing, protecting, and verifying documents from any product. The web application demonstrates the platform; the public API is the integration surface.
 
-This repository is a full-stack todo application used as a production-shaped reference for a Next.js frontend, Spring Boot backend, direct Google/GitHub OAuth login, Postgres persistence, generated OpenAPI TypeScript types, and GitHub Actions image publishing.
+The product is organized around five capabilities: **Sign**, **Protect**, **Verify**, **Passport**, and **Vault**.
 
-## Prerequisites
+Electronic notarization is a separate regulated capability. VinciSign must not present an electronically signed document as notarized unless the required accreditation, commissioned electronic notary, and applicable process are in place.
+
+## Repository status
+
+This repository is the foundation for the platform. Authentication, user management, local infrastructure, OpenAPI generation, and a legacy todo smoke test are currently present. The todo module is not a product feature; it will be replaced by the first document-project vertical slice.
+
+The current build is intentionally small: Spring Boot API, PostgreSQL, and Supabase Storage. The first document flow accepts ready PDF/PDF-A files, stores them, calculates SHA-256, records evidence, and responds synchronously. Mobile is out of scope and must not be modified. Redis, workers, conversion services, malware scanning, notification providers, webhooks, and external synchronization are deferred.
+
+The product requirements and delivery sequence are documented in [`docs/doconchain-replication-plan.md`](docs/doconchain-replication-plan.md), [`implementation-plan.md`](implementation-plan.md), and the detailed [`docs/vincisign-gantt-timeline.md`](docs/vincisign-gantt-timeline.md). The DocOnChain plan is a functional reference, not a branding or implementation-copying instruction.
+
+## Stack
+
+- **Web:** Next.js App Router, TypeScript, Tailwind, shadcn/ui, Auth.js, TanStack Query, Zustand.
+- **API:** Spring Boot 4, Java 21, Maven, Spring Security OAuth2 Resource Server, PostgreSQL, Flyway, MapStruct, Testcontainers.
+- **Identity:** Keycloak in local development, with Google/GitHub providers available through identity-provider configuration.
+- **Shared contract:** OpenAPI-generated TypeScript client.
+
+## Local development
+
+### Prerequisites
 
 - Node.js 20
-- pnpm 10.12.1, via Corepack or a local install matching `packageManager`
+- pnpm 10.12.1
 - Java 21
 - Docker with Docker Compose
 
-## One-Command Start
+### Start the platform
 
 ```bash
 make dev
-# Postgres :5432, backend :8080, frontend :3000
 ```
 
-Open `http://localhost:3000/todos`. The protected route redirects to Google/GitHub login when you are not signed in.
-
-## Architecture
-
-```mermaid
-flowchart LR
-  Browser -->|HTTP| Next[Next.js frontend :3000]
-  Next -->|API requests| Spring[Spring Boot backend :8080]
-  Next -->|Auth.js OAuth| Google[Google OAuth]
-  Next -->|Auth.js OAuth| GitHub[GitHub OAuth]
-  Spring -->|Bearer token userinfo lookup| Google
-  Spring -->|Bearer token userinfo lookup| GitHub
-  Spring -->|JPA/Flyway| Postgres[(Postgres :5432)]
-```
-
-## Repo Layout
-
-```text
-apps/
-  backend/       Spring Boot API, Flyway migrations, tests
-  frontend/      Next.js app, Auth.js, TanStack Query, shadcn/ui
-  mobile/        Flutter app, Riverpod, Dio, generated OpenAPI client
-packages/
-  api-types/     TypeScript types generated from OpenAPI
-infra/
-  docker-compose.yml
-  postgres/      Local database initialization
-docs/
-  adr/           Architecture decision records
-  tickets/       Implementation tickets and completion history
-```
-
-## State Layering Convention
-
-| State type         | Owner          |
-| ------------------ | -------------- |
-| Server state       | TanStack Query |
-| Session/auth       | Auth.js        |
-| Ephemeral UI state | Zustand        |
-
-Keep these layers separate. Do not copy API entities into Zustand, and do not use TanStack Query for local UI controls.
-
-## Add a Backend Module
-
-1. Create a vertical slice for the feature under `apps/backend/src/main/java/com/vencentdev/backend/<name>/`, following the existing package style: `controller`, `service`, `repository`, `entity`, `dto`, and `mapper`.
-2. Use Lombok for JPA entities, Java records for DTOs, and MapStruct for mapper boundaries.
-3. Add a Flyway migration such as `apps/backend/src/main/resources/db/migration/V<n>__<name>.sql`.
-4. Add repository tests with `@DataJpaTest` when persistence behavior matters.
-5. Add API integration tests by extending `IntegrationTestBase`.
-6. Keep security behavior explicit in controller integration tests.
-
-## Add a Frontend Feature
-
-1. Add the page under `apps/frontend/src/app/app/<feature>/page.tsx` for authenticated app routes.
-2. Add a hook such as `apps/frontend/src/hooks/use<Feature>.ts`.
-3. Type API inputs and responses through `@app/api-types`.
-4. Use TanStack Query for server data and mutations.
-5. Add a Zustand store only for ephemeral UI state such as filters, selected tabs, or drawer state.
-6. Keep shared UI primitives in `apps/frontend/src/components/ui`.
-
-## Configure Google and GitHub Login
-
-See [`docs/google-github-oauth-setup.md`](docs/google-github-oauth-setup.md) for the required Google/GitHub OAuth apps, callback URLs, and local environment variables.
-
-## Testing
+This starts local Postgres and Keycloak, then the API and web client. The web app is available at `http://localhost:3000`; the API is available at `http://localhost:8080`.
 
 ```bash
 make backend-test
 pnpm --filter @app/frontend lint
 pnpm --filter @app/frontend typecheck
-pnpm --filter @app/frontend test --if-present
-make mobile-test   # flutter analyze && flutter test (see apps/mobile/README.md)
 ```
 
-The backend tests use Testcontainers for Postgres. The frontend test script is currently a placeholder until a Jest, Vitest, or Playwright suite is added.
+## Architecture
 
-## CI
+```mermaid
+flowchart LR
+  Client[Web or partner platform] -->|OAuth2 / API| API[VinciSign API]
+  API --> DB[(Postgres)]
+  API --> Storage[(Supabase Storage)]
+  API --> IdP[Keycloak / identity providers]
+  API --> Evidence[Evidence records]
+```
 
-GitHub Actions is defined in [`.github/workflows/ci.yml`](.github/workflows/ci.yml).
+## API principles
 
-- Pull requests run backend, frontend, and mobile (Flutter analyze + test) jobs.
-- Pushes to `main` run tests and publish images to GHCR:
-  - `ghcr.io/<owner>/<repo>/backend:latest`
-  - `ghcr.io/<owner>/<repo>/backend:<sha>`
-  - `ghcr.io/<owner>/<repo>/frontend:latest`
-  - `ghcr.io/<owner>/<repo>/frontend:<sha>`
+1. Every side-effecting write supports an idempotency key where retries could create a project, signature, payment, or webhook effect.
+2. Document versions are immutable after signing or notarization; replacements create a new version and evidence history.
+3. State transitions record actor, timestamp, version, participant role, request/session context, and reason when applicable.
+4. API clients are scoped to an organization and have explicit permissions, rate limits, usage records, and revocation.
+5. Webhooks are a future signed integration extension; they are not required by the initial document flow.
+6. Signing evidence, completion certificates, and notarization records are separate connected records.
 
-Repository settings must allow GitHub Actions read/write package permissions for GHCR publishing.
+## Project conventions
 
-## ADRs
+Backend modules use vertical slices under the current template package path. The target Java package is `com.vincisign.backend`, but the package migration must be coordinated rather than performed piecemeal. Entities use Lombok; API DTOs use Java records; persistence changes use Flyway migrations. Frontend server data belongs in TanStack Query, session state belongs to Auth.js, and ephemeral UI state belongs to Zustand.
 
-Architecture decisions live in [`docs/adr/`](docs/adr/). ADR files are append-only: do not renumber them, and supersede old decisions with a new ADR instead of editing history.
+The existing `com.vencentdev.backend` package and `@app/*` package scope are template-era technical names scheduled for the foundation cleanup. They should be changed in one coordinated migration before the first public release, not piecemeal inside feature work.
+
+## Legal and compliance boundary
+
+Before production launch, define supported jurisdictions, document types, signature types, retention/deletion rules, legal holds, certificate revocation, data processing, incident response, and electronic-notarization responsibilities. Review the platform’s terms, privacy notice, electronic-record consent, electronic-signature consent, acceptable-use policy, and enterprise agreements with qualified counsel.
