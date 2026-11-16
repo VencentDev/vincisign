@@ -1,6 +1,6 @@
 # VinciSign Environment Baseline
 
-**Status:** Planning baseline; runtime wiring is not implemented yet  
+**Status:** Runtime baseline for VS-FND-006; upload flow wiring remains pending
 **Confirmed:** 2026-11-14  
 **Scope:** Simple PDF/PDF-A document flow only
 
@@ -39,17 +39,23 @@ The JWT issuer variable already exists in the template, but the authentication i
 SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=<configured-issuer>
 ```
 
-### Supabase Storage — add only with the storage implementation
+### Supabase Storage — backend-only configuration
 
-The backend will need server-only storage configuration when the storage ticket starts:
+The backend storage boundary uses these server-only configuration values:
 
 ```dotenv
 SUPABASE_URL=<supabase-project-url>
 SUPABASE_SERVICE_ROLE_KEY=<server-only-secret>
 SUPABASE_STORAGE_BUCKET=vincisign-documents
+SUPABASE_STORAGE_SIGNED_URL_TTL_SECONDS=300
 ```
 
 The service-role key must never be exposed to the frontend, committed to the repository, placed in a public `NEXT_PUBLIC_*` variable, or returned in an API response. The first flow does not need a frontend Supabase key, Redis variables, ClamAV variables, worker variables, conversion-service variables, notification-provider variables, or webhook secrets.
+
+The initial bucket must be private. The API may create short-lived signed download access when a
+later authorized document endpoint needs it; a signed URL is not stored as the durable document
+reference. Object keys are opaque and must not be derived directly from project IDs, document IDs,
+organization IDs, emails, or original filenames.
 
 ## Setup order
 
