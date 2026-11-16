@@ -351,6 +351,17 @@ Suggested labels: `product`, `legal`, `backend`, `frontend`, `platform`, `securi
 - **Deliverables:** Platform owner, compliance admin, organization owner/admin/member, sender, signer, witness, approver, viewer, notary, auditor, API client, and guest recipient permission model; invite/accept/revoke flows.
 - **Acceptance:** Every role has allowed actions; invitation expiry and revocation work; resource checks do not rely on client-supplied organization IDs.
 
+#### VS-AUTH-001 — Implement manual email/password authentication
+
+- **Ticket record:** [`docs/tickets/VS-AUTH-001-manual-password-authentication.md`](tickets/VS-AUTH-001-manual-password-authentication.md)
+
+- **Owner:** Backend + Web
+- **Window:** Foundation follow-up
+- **Estimate:** 5 days
+- **Dependencies:** VS-FND-001, existing OAuth authentication baseline
+- **Deliverables:** Manual signup/login endpoints, BCrypt password hashes, PostgreSQL-backed opaque sessions, Auth.js Credentials integration, rate limiting, OpenAPI contract, and tests.
+- **Acceptance:** A user can create and access an account with email/password; invalid credentials and duplicate emails fail safely; Google remains available; GitHub remains optional; no mobile or external infrastructure is required.
+
 #### VS-FND-004 — Build onboarding, consent, and account explanation flow
 
 - **Owner:** Web + Backend + Legal/Compliance

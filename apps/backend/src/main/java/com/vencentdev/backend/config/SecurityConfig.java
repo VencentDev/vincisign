@@ -17,7 +17,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 @EnableMethodSecurity
-@EnableConfigurationProperties(AuthRateLimitProperties.class)
+@EnableConfigurationProperties({AuthRateLimitProperties.class, AuthSessionProperties.class})
 public class SecurityConfig {
 
   @Bean
@@ -43,7 +43,9 @@ public class SecurityConfig {
                         "/v3/api-docs",
                         "/v3/api-docs/**",
                         "/swagger-ui.html",
-                        "/swagger-ui/**")
+                        "/swagger-ui/**",
+                        "/api/v1/auth/signup",
+                        "/api/v1/auth/login")
                     .permitAll()
                     .anyRequest()
                     .authenticated())

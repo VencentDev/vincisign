@@ -47,6 +47,9 @@ public class User extends AuditableEntity {
   @Column(name = "display_name", length = 120)
   private String displayName;
 
+  @Column(name = "password_hash", length = 255)
+  private String passwordHash;
+
   @Enumerated(EnumType.STRING)
   @Column(nullable = false)
   private Role role;

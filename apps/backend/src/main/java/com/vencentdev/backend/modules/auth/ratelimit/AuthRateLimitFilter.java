@@ -72,7 +72,9 @@ public class AuthRateLimitFilter extends OncePerRequestFilter {
   private boolean isLimitedEndpoint(HttpServletRequest request) {
     String method = request.getMethod();
     String path = request.getRequestURI();
-    return ("GET".equals(method) && "/api/v1/auth/me".equals(path))
+    return (("POST".equals(method)
+                && ("/api/v1/auth/signup".equals(path) || "/api/v1/auth/login".equals(path)))
+            || ("GET".equals(method) && "/api/v1/auth/me".equals(path)))
         || ("PATCH".equals(method) && "/api/v1/users/me".equals(path));
   }
 
