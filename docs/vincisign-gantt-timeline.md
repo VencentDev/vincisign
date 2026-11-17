@@ -374,6 +374,7 @@ Suggested labels: `product`, `legal`, `backend`, `frontend`, `platform`, `securi
 
 #### VS-FND-005 — Create project and document-version schema
 
+- **Ticket record:** [`docs/tickets/VS-FND-005-project-document-schema.md`](tickets/VS-FND-005-project-document-schema.md)
 - **Owner:** Backend
 - **Window:** S07 / 2027-02-08 – 2027-02-19
 - **Estimate:** 8 days
