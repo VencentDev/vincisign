@@ -406,11 +406,13 @@ Suggested labels: `product`, `legal`, `backend`, `frontend`, `platform`, `securi
 
 #### VS-FND-008 — Add document fingerprinting for accepted working versions
 
-- **Owner:** Backend + Platform
+- **Ticket record:** [`docs/tickets/VS-FND-008-document-fingerprinting.md`](tickets/VS-FND-008-document-fingerprinting.md)
+
+- **Owner:** Backend
 - **Window:** S08–S09 / 2027-02-22 – 2027-03-19
 - **Estimate:** 10 days
 - **Dependencies:** VS-FND-007
-- **Deliverables:** SHA-256 file fingerprint, version fingerprint, metadata capture, and fingerprint evidence event.
+- **Deliverables:** SHA-256 file fingerprint, version fingerprint, and algorithm metadata capture. Fingerprint evidence events are deferred to VS-FND-010.
 - **Acceptance:** Same bytes produce the same fingerprint; different bytes do not; the accepted PDF/PDF-A upload is the working version and is never overwritten in place.
 
 #### VS-FND-009 — Defer malware scanning boundary

@@ -9,6 +9,7 @@ public record DocumentUploadResponse(
     String originalFileName,
     String mediaType,
     long sizeBytes,
+    String fingerprint,
     DocumentVersionStatus status,
     String policyId,
     String policyVersion) {}
