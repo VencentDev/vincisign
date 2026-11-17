@@ -3,6 +3,8 @@ package com.vencentdev.backend.modules.document.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.same;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -18,6 +20,9 @@ import com.vencentdev.backend.modules.document.repository.DocumentRepository;
 import com.vencentdev.backend.modules.document.storage.DocumentStorage;
 import com.vencentdev.backend.modules.document.storage.DocumentStorageObject;
 import com.vencentdev.backend.modules.document.validation.DocumentFileValidator;
+import com.vencentdev.backend.modules.document.validation.DocumentUploadException;
+import com.vencentdev.backend.modules.document.validation.DocumentUploadRejection;
+import com.vencentdev.backend.modules.evidence.service.EvidenceEventService;
 import com.vencentdev.backend.modules.project.entity.Project;
 import com.vencentdev.backend.modules.project.repository.ProjectRepository;
 import com.vencentdev.backend.modules.user.service.UserService;
@@ -41,6 +46,7 @@ class DocumentUploadServiceTest {
   @Mock private DocumentRepository documents;
   @Mock private DocumentVersionService versions;
   @Mock private DocumentFingerprintService fingerprints;
+  @Mock private EvidenceEventService evidenceEvents;
   @Mock private UserService users;
   @Mock private ObjectProvider<DocumentStorage> storageProvider;
   @Mock private DocumentStorage storage;
@@ -58,7 +64,14 @@ class DocumentUploadServiceTest {
   void setUp() {
     service =
         new DocumentUploadServiceImpl(
-            projects, documents, versions, fingerprints, users, storageProvider, validator);
+            projects,
+            documents,
+            versions,
+            fingerprints,
+            evidenceEvents,
+            users,
+            storageProvider,
+            validator);
     projectId = UUID.randomUUID();
     userId = UUID.randomUUID();
     principal = new AuthenticatedUser("external-user", "owner@example.com", "Owner", Set.of());
@@ -127,6 +140,35 @@ class DocumentUploadServiceTest {
     assertThat(versionCaptor.getValue().getFingerprintAlgorithm()).isEqualTo("SHA-256");
     verify(storage).store(any());
     verify(storage, never()).delete(any());
+    verify(evidenceEvents)
+        .recordProjectEvent("document.validation_started", project, userId, principal, java.util.Map.of());
+    verify(evidenceEvents)
+        .recordDocumentEvent(
+            eq("document.uploaded"),
+            same(project),
+            eq(userId),
+            same(principal),
+            same(document),
+            same(version),
+            any());
+    verify(evidenceEvents)
+        .recordDocumentEvent(
+            eq("document.fingerprinted"),
+            same(project),
+            eq(userId),
+            same(principal),
+            same(document),
+            same(version),
+            any());
+    verify(evidenceEvents)
+        .recordDocumentEvent(
+            eq("document.version_created"),
+            same(project),
+            eq(userId),
+            same(principal),
+            same(document),
+            same(version),
+            any());
     InOrder order = inOrder(storage, documents, versions);
     order.verify(storage).store(any());
     order.verify(documents).saveAndFlush(any(Document.class));
@@ -164,5 +206,32 @@ class DocumentUploadServiceTest {
         .hasMessage("database unavailable");
 
     verify(storage).delete(stored);
+  }
+
+  @Test
+  void recordsValidationRejectionWithoutPersistingOrStoring() {
+    MockMultipartFile uploadedFile =
+        new MockMultipartFile("file", "signed.pdf", "application/pdf", new byte[] {1});
+    DocumentUploadException rejection =
+        new DocumentUploadException(
+            DocumentUploadRejection.FILE_TYPE_UNSUPPORTED, "25 MB");
+    when(users.resolveInternalId(principal)).thenReturn(userId);
+    when(projects.findById(projectId)).thenReturn(Optional.of(project));
+    when(validator.validate(uploadedFile)).thenThrow(rejection);
+
+    assertThatThrownBy(() -> service.upload(projectId, principal, uploadedFile))
+        .isSameAs(rejection);
+
+    verify(evidenceEvents)
+        .recordProjectEventInNewTransaction(
+            "document.validation_failed",
+            project,
+            userId,
+            principal,
+            DocumentUploadRejection.FILE_TYPE_UNSUPPORTED.code(),
+            java.util.Map.of(
+                "policyCode", DocumentUploadRejection.FILE_TYPE_UNSUPPORTED.code()));
+    verify(storageProvider, never()).getIfAvailable();
+    verify(documents, never()).saveAndFlush(any());
   }
 }

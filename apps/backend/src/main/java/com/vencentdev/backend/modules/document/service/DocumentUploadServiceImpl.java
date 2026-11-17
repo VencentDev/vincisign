@@ -12,9 +12,12 @@ import com.vencentdev.backend.modules.document.storage.DocumentStorageException;
 import com.vencentdev.backend.modules.document.storage.DocumentStorageObject;
 import com.vencentdev.backend.modules.document.storage.DocumentStorageUpload;
 import com.vencentdev.backend.modules.document.validation.DocumentFileValidator;
+import com.vencentdev.backend.modules.document.validation.DocumentUploadException;
+import com.vencentdev.backend.modules.evidence.service.EvidenceEventService;
 import com.vencentdev.backend.modules.project.entity.Project;
 import com.vencentdev.backend.modules.project.repository.ProjectRepository;
 import com.vencentdev.backend.modules.user.service.UserService;
+import java.util.Map;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,6 +35,7 @@ public class DocumentUploadServiceImpl implements DocumentUploadService {
   private final DocumentRepository documents;
   private final DocumentVersionService versions;
   private final DocumentFingerprintService fingerprints;
+  private final EvidenceEventService evidenceEvents;
   private final UserService users;
   private final ObjectProvider<DocumentStorage> storageProvider;
   private final DocumentFileValidator validator;
@@ -41,6 +45,7 @@ public class DocumentUploadServiceImpl implements DocumentUploadService {
       DocumentRepository documents,
       DocumentVersionService versions,
       DocumentFingerprintService fingerprints,
+      EvidenceEventService evidenceEvents,
       UserService users,
       ObjectProvider<DocumentStorage> storageProvider,
       DocumentFileValidator validator) {
@@ -48,6 +53,7 @@ public class DocumentUploadServiceImpl implements DocumentUploadService {
     this.documents = documents;
     this.versions = versions;
     this.fingerprints = fingerprints;
+    this.evidenceEvents = evidenceEvents;
     this.users = users;
     this.storageProvider = storageProvider;
     this.validator = validator;
@@ -66,7 +72,22 @@ public class DocumentUploadServiceImpl implements DocumentUploadService {
       throw new ForbiddenException("You do not have access to this project.");
     }
 
-    DocumentFileValidator.ValidatedDocument validated = validator.validate(uploadedFile);
+    evidenceEvents.recordProjectEvent(
+        "document.validation_started", project, callerUserId, principal, Map.of());
+
+    DocumentFileValidator.ValidatedDocument validated;
+    try {
+      validated = validator.validate(uploadedFile);
+    } catch (DocumentUploadException exception) {
+      evidenceEvents.recordProjectEventInNewTransaction(
+          "document.validation_failed",
+          project,
+          callerUserId,
+          principal,
+          exception.getPolicyCode(),
+          Map.of("policyCode", exception.getPolicyCode()));
+      throw exception;
+    }
     String fingerprint = fingerprints.sha256(validated.content());
     DocumentStorage storage = storageProvider.getIfAvailable();
     if (storage == null) {
@@ -101,6 +122,36 @@ public class DocumentUploadServiceImpl implements DocumentUploadService {
                   .fingerprint(fingerprint)
                   .createdByUserId(callerUserId)
                   .build());
+
+      evidenceEvents.recordDocumentEvent(
+          "document.uploaded",
+          project,
+          callerUserId,
+          principal,
+          document,
+          version,
+          Map.of("mediaType", version.getMediaType(), "sizeBytes", version.getSizeBytes()));
+      evidenceEvents.recordDocumentEvent(
+          "document.fingerprinted",
+          project,
+          callerUserId,
+          principal,
+          document,
+          version,
+          Map.of(
+              "algorithm", version.getFingerprintAlgorithm(),
+              "fingerprint", version.getFingerprint()));
+      evidenceEvents.recordDocumentEvent(
+          "document.version_created",
+          project,
+          callerUserId,
+          principal,
+          document,
+          version,
+          Map.of(
+              "versionNumber", version.getVersionNumber(),
+              "role", version.getRole().name(),
+              "status", version.getStatus().name()));
 
       return new DocumentUploadResponse(
           document.getId(),

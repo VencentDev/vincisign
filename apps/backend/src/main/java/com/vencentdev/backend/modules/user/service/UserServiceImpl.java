@@ -11,6 +11,7 @@ import com.vencentdev.backend.modules.user.enums.Role;
 import com.vencentdev.backend.modules.user.enums.UserType;
 import com.vencentdev.backend.modules.user.mapper.UserMapper;
 import com.vencentdev.backend.modules.user.repository.UserRepository;
+import java.util.Optional;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -56,6 +57,12 @@ public class UserServiceImpl implements UserService {
         .findByExternalId(principal.subject())
         .orElseGet(() -> repository.save(newUser(principal)))
         .getId();
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public Optional<UUID> findExistingInternalId(AuthenticatedUser principal) {
+    return repository.findByExternalId(principal.subject()).map(User::getId);
   }
 
   private User findByPrincipal(AuthenticatedUser principal) {
