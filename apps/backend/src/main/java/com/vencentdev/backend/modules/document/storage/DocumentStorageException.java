@@ -16,7 +16,7 @@ public class DocumentStorageException extends RuntimeException {
     this.operation = operation;
   }
 
-  static DocumentStorageException forOperation(Operation operation, Throwable cause) {
+  public static DocumentStorageException forOperation(Operation operation, Throwable cause) {
     return new DocumentStorageException(operation, cause);
   }
 

@@ -395,11 +395,13 @@ Suggested labels: `product`, `legal`, `backend`, `frontend`, `platform`, `securi
 
 #### VS-FND-007 — Build document upload validation and working-version persistence
 
-- **Owner:** Backend + Web
+- **Ticket record:** [`docs/tickets/VS-FND-007-document-upload-validation.md`](tickets/VS-FND-007-document-upload-validation.md)
+
+- **Owner:** Backend
 - **Window:** S08 / 2027-02-22 – 2027-03-05
 - **Estimate:** 10 days
 - **Dependencies:** VS-FND-005, VS-FND-006, VS-P0-003
-- **Deliverables:** Upload endpoint, PDF/PDF-A/size/corruption/password checks, Supabase object persistence, upload error UI, upload evidence event.
+- **Deliverables:** Upload endpoint, PDF/PDF-A/size/corruption/password checks, Supabase object persistence, safe upload errors, and ready original/working-version persistence.
 - **Acceptance:** Unsupported, corrupted, password-protected, oversized, and empty files fail without a false ready state; the accepted working version remains retrievable by authorized users.
 
 #### VS-FND-008 — Add document fingerprinting for accepted working versions
