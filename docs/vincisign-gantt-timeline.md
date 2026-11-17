@@ -426,12 +426,14 @@ Suggested labels: `product`, `legal`, `backend`, `frontend`, `platform`, `securi
 
 #### VS-FND-010 — Implement evidence event persistence and access API
 
+- **Ticket record:** [`docs/tickets/VS-FND-010-evidence-event-persistence.md`](tickets/VS-FND-010-evidence-event-persistence.md)
+
 - **Owner:** Backend
 - **Window:** S10 / 2027-03-22 – 2027-04-02
 - **Estimate:** 10 days
-- **Dependencies:** VS-P0-008, VS-FND-005
-- **Deliverables:** Append-oriented EvidenceEvent table, event writer, project event endpoint, actor/session/device context capture, trace linkage.
-- **Acceptance:** Events are append-only to normal application roles; project/event responses respect permissions; duplicate event handling is deterministic and tested.
+- **Dependencies:** VS-P0-008, VS-FND-005, VS-FND-007, VS-FND-008
+- **Deliverables:** Append-oriented EvidenceEvent table, upload/validation/fingerprint/version event writer, owner-authorized project event endpoint, actor/policy/request trace linkage, event sequence/hash protection.
+- **Acceptance:** Accepted uploads expose an ordered evidence timeline; validation rejections retain a safe policy-code event; event rows are append-only; unauthorized project reads return no event history. Public request idempotency remains VS-API-005.
 
 #### VS-FND-011 — Implement project lifecycle transition service
 
