@@ -89,6 +89,11 @@ public class GlobalExceptionHandler {
     return error(HttpStatus.CONFLICT, "CONFLICT", exception.getMessage(), List.of());
   }
 
+  @ExceptionHandler(ProjectTransitionException.class)
+  ResponseEntity<ApiError> handleProjectTransition(ProjectTransitionException exception) {
+    return error(exception.getStatus(), exception.getCode(), exception.getMessage(), List.of());
+  }
+
   @ExceptionHandler(AccessDeniedException.class)
   ResponseEntity<ApiError> handleAccessDenied(AccessDeniedException exception) {
     return error(HttpStatus.FORBIDDEN, "ACCESS_DENIED", "Access denied", List.of());

@@ -18,6 +18,14 @@ public interface EvidenceEventService {
       AuthenticatedUser principal,
       Map<String, Object> payload);
 
+  UUID recordProjectEventWithId(
+      String eventType,
+      Project project,
+      UUID actorUserId,
+      AuthenticatedUser principal,
+      String reasonCode,
+      Map<String, Object> payload);
+
   void recordProjectEventInNewTransaction(
       String eventType,
       Project project,
@@ -33,6 +41,16 @@ public interface EvidenceEventService {
       AuthenticatedUser principal,
       Document document,
       DocumentVersion version,
+      Map<String, Object> payload);
+
+  UUID recordDocumentEventWithId(
+      String eventType,
+      Project project,
+      UUID actorUserId,
+      AuthenticatedUser principal,
+      Document document,
+      DocumentVersion version,
+      String reasonCode,
       Map<String, Object> payload);
 
   List<EvidenceEventResponse> listProjectEvents(UUID projectId, AuthenticatedUser principal);

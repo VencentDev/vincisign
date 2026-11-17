@@ -16,6 +16,7 @@ import com.vencentdev.backend.modules.document.validation.DocumentUploadExceptio
 import com.vencentdev.backend.modules.evidence.service.EvidenceEventService;
 import com.vencentdev.backend.modules.project.entity.Project;
 import com.vencentdev.backend.modules.project.repository.ProjectRepository;
+import com.vencentdev.backend.modules.project.service.ProjectTransitionService;
 import com.vencentdev.backend.modules.user.service.UserService;
 import java.util.Map;
 import java.util.UUID;
@@ -36,6 +37,7 @@ public class DocumentUploadServiceImpl implements DocumentUploadService {
   private final DocumentVersionService versions;
   private final DocumentFingerprintService fingerprints;
   private final EvidenceEventService evidenceEvents;
+  private final ProjectTransitionService projectTransitions;
   private final UserService users;
   private final ObjectProvider<DocumentStorage> storageProvider;
   private final DocumentFileValidator validator;
@@ -46,6 +48,7 @@ public class DocumentUploadServiceImpl implements DocumentUploadService {
       DocumentVersionService versions,
       DocumentFingerprintService fingerprints,
       EvidenceEventService evidenceEvents,
+      ProjectTransitionService projectTransitions,
       UserService users,
       ObjectProvider<DocumentStorage> storageProvider,
       DocumentFileValidator validator) {
@@ -54,6 +57,7 @@ public class DocumentUploadServiceImpl implements DocumentUploadService {
     this.versions = versions;
     this.fingerprints = fingerprints;
     this.evidenceEvents = evidenceEvents;
+    this.projectTransitions = projectTransitions;
     this.users = users;
     this.storageProvider = storageProvider;
     this.validator = validator;
@@ -71,6 +75,7 @@ public class DocumentUploadServiceImpl implements DocumentUploadService {
     if (!callerUserId.equals(project.getOwnerUserId())) {
       throw new ForbiddenException("You do not have access to this project.");
     }
+    projectTransitions.assertDocumentUploadAllowed(project);
 
     evidenceEvents.recordProjectEvent(
         "document.validation_started", project, callerUserId, principal, Map.of());
@@ -152,6 +157,8 @@ public class DocumentUploadServiceImpl implements DocumentUploadService {
               "versionNumber", version.getVersionNumber(),
               "role", version.getRole().name(),
               "status", version.getStatus().name()));
+      projectTransitions.recordDocumentUploaded(
+          project, callerUserId, principal, document, version);
 
       return new DocumentUploadResponse(
           document.getId(),
