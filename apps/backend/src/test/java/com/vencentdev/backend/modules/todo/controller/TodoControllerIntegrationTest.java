@@ -17,10 +17,15 @@ import com.vencentdev.backend.IntegrationTestBase;
 import com.vencentdev.backend.modules.todo.entity.Todo;
 import com.vencentdev.backend.modules.todo.enums.TodoStatus;
 import com.vencentdev.backend.modules.todo.repository.TodoRepository;
+import com.vencentdev.backend.modules.onboarding.entity.ConsentRecord;
+import com.vencentdev.backend.modules.onboarding.enums.ConsentStatus;
+import com.vencentdev.backend.modules.onboarding.repository.ConsentRecordRepository;
+import com.vencentdev.backend.modules.onboarding.service.OnboardingPolicyCatalog;
 import com.vencentdev.backend.modules.user.entity.User;
 import com.vencentdev.backend.modules.user.enums.Role;
 import com.vencentdev.backend.modules.user.enums.UserType;
 import com.vencentdev.backend.modules.user.repository.UserRepository;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -37,6 +42,7 @@ class TodoControllerIntegrationTest extends IntegrationTestBase {
   @Autowired private ObjectMapper objectMapper;
   @Autowired private TodoRepository todoRepository;
   @Autowired private UserRepository userRepository;
+  @Autowired private ConsentRecordRepository consentRecords;
 
   @BeforeEach
   void setUp() {
@@ -236,6 +242,7 @@ class TodoControllerIntegrationTest extends IntegrationTestBase {
   private org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors
           .JwtRequestPostProcessor
       currentUser(String subject) {
+    ensureOnboarded(subject);
     return jwt()
         .jwt(
             token ->
@@ -254,5 +261,32 @@ class TodoControllerIntegrationTest extends IntegrationTestBase {
         .role(Role.USER)
         .userType(UserType.INDIVIDUAL)
         .build();
+  }
+
+  private void ensureOnboarded(String subject) {
+    User account =
+        userRepository.findByExternalId(subject).orElseGet(() -> userRepository.save(user(subject)));
+    if (account.getOnboardingCompletedAt() != null) {
+      return;
+    }
+
+    Instant decidedAt = Instant.now();
+    OnboardingPolicyCatalog.required()
+        .forEach(
+            policy ->
+                consentRecords.save(
+                    ConsentRecord.builder()
+                        .userId(account.getId())
+                        .consentType(policy.type())
+                        .policyId(policy.policyId())
+                        .policyVersion(policy.policyVersion())
+                        .policyReference(policy.policyReference())
+                        .consentText(policy.description())
+                        .status(ConsentStatus.ACCEPTED)
+                        .decidedAt(decidedAt)
+                        .actorUserId(account.getId())
+                        .build()));
+    account.setOnboardingCompletedAt(decidedAt);
+    userRepository.save(account);
   }
 }

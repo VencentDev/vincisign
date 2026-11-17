@@ -2,6 +2,8 @@ import type { ReactNode } from 'react';
 import { redirect } from 'next/navigation';
 
 import { SessionErrorGate } from '@/components/session-error-gate';
+import { getOnboardingRedirectUrl } from '@/features/onboarding/lib/onboarding';
+import { getOnboardingStatusForGuard } from '@/features/onboarding/lib/onboarding-server';
 import { auth } from '@/lib/auth';
 
 export default async function OrganizationsLayout({ children }: { children: ReactNode }) {
@@ -9,6 +11,11 @@ export default async function OrganizationsLayout({ children }: { children: Reac
 
   if (!session) {
     redirect('/login?callbackUrl=/organizations');
+  }
+
+  const onboarding = await getOnboardingStatusForGuard();
+  if (onboarding && !onboarding.completed) {
+    redirect(getOnboardingRedirectUrl('/organizations'));
   }
 
   return (

@@ -118,6 +118,92 @@
         ]
       }
     },
+    "/api/v1/onboarding/status": {
+      "get": {
+        "operationId": "getOnboardingStatus",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OnboardingStatusResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/onboarding/complete": {
+      "post": {
+        "operationId": "completeOnboarding",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompleteOnboardingRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OnboardingStatusResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/onboarding/consents/{consentType}/withdraw": {
+      "post": {
+        "operationId": "withdrawOnboardingConsent",
+        "parameters": [
+          {
+            "name": "consentType",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/OnboardingConsentType"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OnboardingStatusResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
     "/api/v1/accounts/me": {
       "get": {
         "operationId": "getCurrentAccount",
@@ -1037,6 +1123,125 @@
             "type": "string",
             "maxLength": 120,
             "minLength": 1
+          }
+        }
+      },
+      "CompleteOnboardingRequest": {
+        "type": "object",
+        "required": ["userType", "consents"],
+        "properties": {
+          "userType": {
+            "$ref": "#/components/schemas/UserType"
+          },
+          "consents": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "$ref": "#/components/schemas/OnboardingConsentDecision"
+            }
+          }
+        }
+      },
+      "ConsentRequirementResponse": {
+        "type": "object",
+        "required": [
+          "type",
+          "policyId",
+          "policyVersion",
+          "policyReference",
+          "title",
+          "description",
+          "required",
+          "status",
+          "acceptedAt"
+        ],
+        "properties": {
+          "type": {
+            "$ref": "#/components/schemas/OnboardingConsentType"
+          },
+          "policyId": {
+            "type": "string"
+          },
+          "policyVersion": {
+            "type": "string"
+          },
+          "policyReference": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "required": {
+            "type": "boolean"
+          },
+          "status": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ConsentStatus"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "acceptedAt": {
+            "type": ["string", "null"],
+            "format": "date-time"
+          }
+        }
+      },
+      "ConsentStatus": {
+        "type": "string",
+        "enum": ["ACCEPTED", "DECLINED", "WITHDRAWN"]
+      },
+      "OnboardingConsentDecision": {
+        "type": "object",
+        "required": ["type", "accepted"],
+        "properties": {
+          "type": {
+            "$ref": "#/components/schemas/OnboardingConsentType"
+          },
+          "accepted": {
+            "type": "boolean"
+          }
+        }
+      },
+      "OnboardingConsentType": {
+        "type": "string",
+        "enum": [
+          "TERMS_OF_SERVICE",
+          "PRIVACY_NOTICE",
+          "ELECTRONIC_RECORDS",
+          "PLATFORM_LIMITS_ACKNOWLEDGEMENT"
+        ]
+      },
+      "OnboardingStatusResponse": {
+        "type": "object",
+        "required": ["completed", "userType", "blockedCode", "limits", "requiredConsents"],
+        "properties": {
+          "completed": {
+            "type": "boolean"
+          },
+          "userType": {
+            "$ref": "#/components/schemas/UserType"
+          },
+          "blockedCode": {
+            "type": ["string", "null"]
+          },
+          "limits": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "requiredConsents": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ConsentRequirementResponse"
+            }
           }
         }
       },

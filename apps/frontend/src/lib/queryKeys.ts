@@ -1,5 +1,8 @@
 export const qk = {
   me: () => ['me'] as const,
+  onboarding: {
+    status: () => ['onboarding', 'status'] as const,
+  },
   organizations: {
     all: () => ['organizations'] as const,
     detail: (organizationId: string) => ['organizations', organizationId] as const,
