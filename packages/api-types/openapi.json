@@ -1060,6 +1060,49 @@
           }
         ]
       }
+    },
+    "/api/v1/projects/{projectId}/transitions": {
+      "post": {
+        "operationId": "transitionProject",
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProjectTransitionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectTransitionResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
     }
   },
   "components": {
@@ -1588,6 +1631,124 @@
             "format": "date"
           }
         }
+      },
+      "ProjectTransitionRequest": {
+        "type": "object",
+        "required": ["action", "expectedAggregateVersion"],
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "prepare",
+              "reopen-document",
+              "add-participants",
+              "correct-participants",
+              "mark-ready",
+              "edit-before-send",
+              "send",
+              "view",
+              "partially-sign",
+              "reopen-approval",
+              "await-approval",
+              "await-notarization",
+              "start-notarization",
+              "complete",
+              "archive",
+              "expire",
+              "cancel",
+              "decline",
+              "reject",
+              "suspend",
+              "resume",
+              "revoke"
+            ]
+          },
+          "expectedAggregateVersion": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "reasonCode": {
+            "type": ["string", "null"],
+            "maxLength": 80
+          }
+        }
+      },
+      "ProjectTransitionResponse": {
+        "type": "object",
+        "required": [
+          "transitionId",
+          "projectId",
+          "previousStatus",
+          "status",
+          "aggregateVersion",
+          "action",
+          "evidenceEventIds",
+          "pendingWork"
+        ],
+        "properties": {
+          "transitionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "projectId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "previousStatus": {
+            "$ref": "#/components/schemas/ProjectStatus"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ProjectStatus"
+          },
+          "aggregateVersion": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "action": {
+            "type": "string"
+          },
+          "reasonCode": {
+            "type": ["string", "null"]
+          },
+          "evidenceEventIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "pendingWork": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "ProjectStatus": {
+        "type": "string",
+        "enum": [
+          "DRAFT",
+          "DOCUMENT_UPLOADED",
+          "DOCUMENT_PREPARED",
+          "PARTICIPANTS_ADDED",
+          "READY_TO_SEND",
+          "SENT",
+          "VIEWED",
+          "PARTIALLY_SIGNED",
+          "AWAITING_APPROVAL",
+          "AWAITING_NOTARIZATION",
+          "NOTARIZATION_IN_PROGRESS",
+          "COMPLETED",
+          "ARCHIVED",
+          "EXPIRED",
+          "CANCELLED",
+          "DECLINED",
+          "REJECTED",
+          "SUSPENDED",
+          "REVOKED"
+        ]
       },
       "UserResponse": {
         "type": "object",

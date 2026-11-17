@@ -437,12 +437,14 @@ Suggested labels: `product`, `legal`, `backend`, `frontend`, `platform`, `securi
 
 #### VS-FND-011 — Implement project lifecycle transition service
 
+- **Ticket record:** [`docs/tickets/VS-FND-011-project-lifecycle-transitions.md`](tickets/VS-FND-011-project-lifecycle-transitions.md)
+
 - **Owner:** Backend
 - **Window:** S10 / 2027-03-22 – 2027-04-02
 - **Estimate:** 8 days
 - **Dependencies:** VS-P0-007, VS-FND-005, VS-FND-010
-- **Deliverables:** Transition service, allowed-transition table, state transition event, actor/reason validation.
-- **Acceptance:** Invalid transitions fail with stable errors; cancelled projects cannot receive signatures; completed documents cannot return to draft; every successful transition records previous/current state and version.
+- **Deliverables:** Named transition endpoint/service, allowed-transition table, optimistic aggregate-version guard, suspension recovery state, upload lifecycle integration, state transition evidence event, and actor/reason validation.
+- **Acceptance:** Invalid transitions fail with stable errors; owner-only access is enforced; cancelled/expired/suspended/completed projects cannot accept uploads or later ordinary transitions; completed projects cannot return to draft; every successful transition records previous/current state and version.
 
 #### VS-FND-012 — Add organization dashboard and project list
 

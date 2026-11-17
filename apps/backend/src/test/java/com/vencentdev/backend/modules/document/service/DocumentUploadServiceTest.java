@@ -7,10 +7,12 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.same;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.vencentdev.backend.common.exception.ForbiddenException;
+import com.vencentdev.backend.common.exception.ProjectTransitionException;
 import com.vencentdev.backend.modules.auth.AuthenticatedUser;
 import com.vencentdev.backend.modules.document.dto.DocumentUploadResponse;
 import com.vencentdev.backend.modules.document.entity.Document;
@@ -25,6 +27,7 @@ import com.vencentdev.backend.modules.document.validation.DocumentUploadRejectio
 import com.vencentdev.backend.modules.evidence.service.EvidenceEventService;
 import com.vencentdev.backend.modules.project.entity.Project;
 import com.vencentdev.backend.modules.project.repository.ProjectRepository;
+import com.vencentdev.backend.modules.project.service.ProjectTransitionService;
 import com.vencentdev.backend.modules.user.service.UserService;
 import java.util.Optional;
 import java.util.Set;
@@ -37,6 +40,7 @@ import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.http.HttpStatus;
 import org.springframework.mock.web.MockMultipartFile;
 
 @ExtendWith(MockitoExtension.class)
@@ -47,6 +51,7 @@ class DocumentUploadServiceTest {
   @Mock private DocumentVersionService versions;
   @Mock private DocumentFingerprintService fingerprints;
   @Mock private EvidenceEventService evidenceEvents;
+  @Mock private ProjectTransitionService projectTransitions;
   @Mock private UserService users;
   @Mock private ObjectProvider<DocumentStorage> storageProvider;
   @Mock private DocumentStorage storage;
@@ -69,6 +74,7 @@ class DocumentUploadServiceTest {
             versions,
             fingerprints,
             evidenceEvents,
+            projectTransitions,
             users,
             storageProvider,
             validator);
@@ -151,6 +157,8 @@ class DocumentUploadServiceTest {
             same(document),
             same(version),
             any());
+    verify(projectTransitions)
+        .recordDocumentUploaded(same(project), eq(userId), same(principal), same(document), same(version));
     verify(evidenceEvents)
         .recordDocumentEvent(
             eq("document.fingerprinted"),
@@ -233,5 +241,28 @@ class DocumentUploadServiceTest {
                 "policyCode", DocumentUploadRejection.FILE_TYPE_UNSUPPORTED.code()));
     verify(storageProvider, never()).getIfAvailable();
     verify(documents, never()).saveAndFlush(any());
+  }
+
+  @Test
+  void refusesUploadWhenProjectLifecycleDoesNotAllowDocuments() {
+    MockMultipartFile uploadedFile =
+        new MockMultipartFile("file", "signed.pdf", "application/pdf", validated.content());
+    when(users.resolveInternalId(principal)).thenReturn(userId);
+    when(projects.findById(projectId)).thenReturn(Optional.of(project));
+    doThrow(
+            new ProjectTransitionException(
+                HttpStatus.CONFLICT,
+                "PROJECT_TRANSITION_NOT_ALLOWED",
+                "The project cannot accept a document in its current state."))
+        .when(projectTransitions)
+        .assertDocumentUploadAllowed(project);
+
+    assertThatThrownBy(() -> service.upload(projectId, principal, uploadedFile))
+        .isInstanceOf(ProjectTransitionException.class);
+
+    verify(validator, never()).validate(any());
+    verify(storageProvider, never()).getIfAvailable();
+    verify(evidenceEvents, never())
+        .recordProjectEvent("document.validation_started", project, userId, principal, java.util.Map.of());
   }
 }

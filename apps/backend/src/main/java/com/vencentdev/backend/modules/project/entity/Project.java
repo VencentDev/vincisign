@@ -18,12 +18,10 @@ import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @Entity
 @Table(name = "projects")
 @Getter
-@Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
@@ -52,6 +50,10 @@ public class Project extends AuditableEntity {
   @Column(nullable = false, length = 32)
   private ProjectStatus status = ProjectStatus.DRAFT;
 
+  @Enumerated(EnumType.STRING)
+  @Column(name = "suspended_from_status", length = 32)
+  private ProjectStatus suspendedFromStatus;
+
   @Builder.Default
   @Column(name = "policy_id", nullable = false, length = 120)
   private String policyId = "DOC-POLICY";
@@ -63,4 +65,9 @@ public class Project extends AuditableEntity {
   @Version
   @Column(name = "aggregate_version", nullable = false)
   private long aggregateVersion;
+
+  public void transitionTo(ProjectStatus nextStatus, ProjectStatus nextSuspendedFromStatus) {
+    this.status = nextStatus;
+    this.suspendedFromStatus = nextSuspendedFromStatus;
+  }
 }

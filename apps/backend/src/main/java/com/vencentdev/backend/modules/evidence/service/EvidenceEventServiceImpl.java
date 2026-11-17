@@ -60,7 +60,22 @@ public class EvidenceEventServiceImpl implements EvidenceEventService {
       UUID actorUserId,
       AuthenticatedUser principal,
       Map<String, Object> payload) {
-    events.save(newEvent(eventType, project, actorUserId, principal, null, null, null, payload));
+    recordProjectEventWithId(eventType, project, actorUserId, principal, null, payload);
+  }
+
+  @Override
+  @Transactional
+  public UUID recordProjectEventWithId(
+      String eventType,
+      Project project,
+      UUID actorUserId,
+      AuthenticatedUser principal,
+      String reasonCode,
+      Map<String, Object> payload) {
+    EvidenceEvent event =
+        newEvent(eventType, project, actorUserId, principal, null, null, reasonCode, payload);
+    EvidenceEvent saved = events.save(event);
+    return saved == null ? event.getId() : saved.getId();
   }
 
   @Override
@@ -86,9 +101,25 @@ public class EvidenceEventServiceImpl implements EvidenceEventService {
       Document document,
       DocumentVersion version,
       Map<String, Object> payload) {
-    events.save(
-        newEvent(
-            eventType, project, actorUserId, principal, document, version, null, payload));
+    recordDocumentEventWithId(
+        eventType, project, actorUserId, principal, document, version, null, payload);
+  }
+
+  @Override
+  @Transactional
+  public UUID recordDocumentEventWithId(
+      String eventType,
+      Project project,
+      UUID actorUserId,
+      AuthenticatedUser principal,
+      Document document,
+      DocumentVersion version,
+      String reasonCode,
+      Map<String, Object> payload) {
+    EvidenceEvent event =
+        newEvent(eventType, project, actorUserId, principal, document, version, reasonCode, payload);
+    EvidenceEvent saved = events.save(event);
+    return saved == null ? event.getId() : saved.getId();
   }
 
   @Override
