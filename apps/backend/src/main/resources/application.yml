@@ -24,6 +24,12 @@ app:
       enabled: ${APP_RATE_LIMIT_AUTH_ENABLED:true}
       capacity: ${APP_RATE_LIMIT_AUTH_CAPACITY:60}
       refill-period: ${APP_RATE_LIMIT_AUTH_REFILL_PERIOD:1m}
+  storage:
+    supabase:
+      url: ${SUPABASE_URL:}
+      service-role-key: ${SUPABASE_SERVICE_ROLE_KEY:}
+      bucket: ${SUPABASE_STORAGE_BUCKET:vincisign-documents}
+      signed-download-url-ttl: ${SUPABASE_STORAGE_SIGNED_URL_TTL_SECONDS:300s}
 
 management:
   endpoints:

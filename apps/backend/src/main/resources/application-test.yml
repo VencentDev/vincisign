@@ -5,3 +5,8 @@ spring:
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:tc:postgresql:16:///backend_test}
     driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
+app:
+  storage:
+    supabase:
+      url: ''
+      service-role-key: ''

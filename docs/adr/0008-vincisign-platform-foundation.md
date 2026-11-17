@@ -41,7 +41,11 @@ Use Supabase Storage through an object-storage adapter:
 - Private buckets/containers, non-guessable keys, server-side encryption, least-privilege credentials, and signed short-lived access URLs.
 - Explicit object lifecycle/retention controls that cannot delete an object under legal hold or active evidence retention.
 
-The storage adapter must expose put, metadata, read/reference, copy-to-new-version, and policy-controlled delete operations without leaking Supabase-specific types into domain modules. Quarantine and restore are deferred until a security-scanning workflow is introduced.
+The initial storage adapter exposes put, metadata/reference, signed read access, and
+policy-controlled delete operations without leaking Supabase-specific types into domain modules.
+Copy-to-new-version is deferred until a server-side derivation flow needs it; the current upload
+flow creates a new object for every replacement. Quarantine and restore are deferred until a
+security-scanning workflow is introduced.
 
 ### 4. Keep the initial document flow synchronous and PDF-only
 

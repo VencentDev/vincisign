@@ -384,6 +384,8 @@ Suggested labels: `product`, `legal`, `backend`, `frontend`, `platform`, `securi
 
 #### VS-FND-006 — Implement document storage abstraction
 
+- **Ticket record:** [`docs/tickets/VS-FND-006-storage-abstraction.md`](tickets/VS-FND-006-storage-abstraction.md)
+
 - **Owner:** Platform + Backend
 - **Window:** S07 / 2027-02-08 – 2027-02-19
 - **Estimate:** 7 days
