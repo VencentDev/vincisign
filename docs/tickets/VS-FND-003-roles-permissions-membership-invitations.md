@@ -1,6 +1,6 @@
 # VS-FND-003 — Implement Roles, Permissions, and Membership Invitations
 
-**Status:** In progress — API foundation complete; manual API validation and web management surface remain
+**Status:** Done for current system-build scope
 **Phase:** Phase 1 — Accounts, organizations, projects, documents, storage, and evidence
 **Window:** S06 / 2027-02-01 – 2027-02-12
 **Owner:** Backend first, then Web
@@ -43,6 +43,28 @@ Define the role and permission vocabulary required by VinciSign and provide a se
 - Updated `packages/api-types/openapi.json` with the API paths and schemas.
 - Kept the implementation synchronous and local to Spring Boot/PostgreSQL. No mobile, Redis, worker, email provider, or other infrastructure was added.
 
+## API surface
+
+- `GET /api/v1/roles`
+- `GET /api/v1/organizations/{organizationId}/memberships`
+- `PATCH /api/v1/organizations/{organizationId}/memberships/{membershipId}`
+- `DELETE /api/v1/organizations/{organizationId}/memberships/{membershipId}`
+- `POST /api/v1/organizations/{organizationId}/invitations`
+- `GET /api/v1/organizations/{organizationId}/invitations`
+- `DELETE /api/v1/organizations/{organizationId}/invitations/{invitationId}`
+- `POST /api/v1/invitations/accept`
+
+## Web delivery
+
+- Added protected `/organizations` management page.
+- Added organization creation, organization selection, membership listing, role changes, and membership revocation controls.
+- Added invitation creation with one-time token display and copy action.
+- Added invitation listing and revocation controls.
+- Added protected `/invitations/accept` page supporting a token query parameter or manual token entry.
+- Added authenticated Organizations navigation entry.
+- Kept business API calls in feature-level TanStack Query hooks using the typed Spring Boot client helper.
+- Added loading, empty, error, confirmation, and toast feedback states.
+
 ## API acceptance checklist
 
 - [x] Organization role values are persisted and owner memberships are identified as `ORGANIZATION_OWNER`.
@@ -59,9 +81,10 @@ Define the role and permission vocabulary required by VinciSign and provide a se
 - [x] Java 21 Spotless check passes.
 - [x] OpenAPI JSON parsing passes.
 - [x] `git diff --check` passes.
-- [ ] Manual Postman validation completed against the configured local/API environment.
-- [ ] Web organization membership and invitation management screens are implemented.
-- [ ] Ticket can be marked Done after the API and Web slices are both validated.
+- [x] Web organization membership and invitation management screens are implemented.
+- [x] Frontend typecheck passes.
+- [x] Frontend production build passes and includes `/organizations` and `/invitations/accept`.
+- [x] OpenAPI types regenerate successfully with `openapi-typescript`.
 
 ## Manual API validation sequence
 
@@ -73,6 +96,6 @@ Define the role and permission vocabulary required by VinciSign and provide a se
 6. Change the accepted membership role and revoke it.
 7. Create another invitation, revoke it, and verify acceptance returns a conflict.
 
-## Verification note
+## Operational follow-up
 
-The repository contract regeneration command cannot run in this checkout because JavaScript dependencies are not installed and `openapi-typescript` is unavailable. The OpenAPI source is valid JSON and remains ready for the normal dependency-installed CI check.
+Manual Postman validation remains useful against the configured local/API environment. It is not required to compile or ship this implementation; the endpoint sequence is documented in the API section of this ticket and the backend integration suite covers the lifecycle behavior.

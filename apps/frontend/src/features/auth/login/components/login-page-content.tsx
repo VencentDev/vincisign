@@ -2,7 +2,8 @@
 
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { Suspense } from 'react';
+import { signIn } from 'next-auth/react';
+import { type FormEvent, Suspense, useState } from 'react';
 
 import { siteConfig } from '@/config/site';
 import { AuroraPanel } from '@/features/auth/shared/components/aurora-panel';
@@ -24,6 +25,40 @@ function LoginContent() {
 }
 
 function LoginShell({ callbackUrl }: { callbackUrl?: string }) {
+  const [error, setError] = useState<string | null>(null);
+  const [isPending, setIsPending] = useState(false);
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setError(null);
+    setIsPending(true);
+
+    const formData = new FormData(event.currentTarget);
+    const email = String(formData.get('email') ?? '').trim();
+    const password = String(formData.get('password') ?? '');
+
+    if (!email || !password) {
+      setError('Enter your email and password.');
+      setIsPending(false);
+      return;
+    }
+
+    const result = await signIn('credentials', {
+      email,
+      password,
+      redirect: false,
+      redirectTo: callbackUrl,
+    });
+
+    if (!result || result.error) {
+      setError('Invalid email or password.');
+      setIsPending(false);
+      return;
+    }
+
+    window.location.assign(result.url ?? '/todos');
+  }
+
   return (
     <main className="relative -mx-4 -my-6 flex min-h-[calc(100svh-3.5rem)] max-w-[100vw] items-center overflow-x-clip overflow-y-hidden bg-background px-4 py-6 text-foreground selection:bg-accent/30 md:py-8">
       <BackgroundOrbs />
@@ -34,7 +69,7 @@ function LoginShell({ callbackUrl }: { callbackUrl?: string }) {
           subtitle="Secure access to your signing workspace."
         />
         <div className="flex flex-1 items-center p-8 md:p-12">
-          <form className="w-full space-y-6" onSubmit={(event) => event.preventDefault()}>
+          <form className="w-full space-y-6" onSubmit={handleSubmit}>
             <div className="space-y-2">
               <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-accent-alt">
                 Signing workspace
@@ -89,11 +124,21 @@ function LoginShell({ callbackUrl }: { callbackUrl?: string }) {
               </div>
             </div>
 
+            {error ? (
+              <p
+                role="alert"
+                className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive"
+              >
+                {error}
+              </p>
+            ) : null}
+
             <button
               type="submit"
+              disabled={isPending}
               className="w-full rounded-lg bg-foreground py-2.5 font-semibold text-background shadow-lg shadow-foreground/5 transition-all duration-300 hover:bg-foreground/90 hover:shadow-foreground/15 active:scale-[0.98]"
             >
-              Sign In
+              {isPending ? 'Signing in…' : 'Sign In'}
             </button>
 
             <AuthDivider label="Alternative" />

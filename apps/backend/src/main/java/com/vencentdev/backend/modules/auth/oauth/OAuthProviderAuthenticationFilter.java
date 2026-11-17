@@ -1,6 +1,7 @@
 package com.vencentdev.backend.modules.auth.oauth;
 
 import com.vencentdev.backend.modules.auth.AuthenticatedUser;
+import com.vencentdev.backend.modules.auth.service.ManualAuthService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -18,9 +19,12 @@ public class OAuthProviderAuthenticationFilter extends OncePerRequestFilter {
   private static final String BEARER_PREFIX = "Bearer ";
 
   private final OAuthProviderUserInfoClient userInfoClient;
+  private final ManualAuthService manualAuthService;
 
-  public OAuthProviderAuthenticationFilter(OAuthProviderUserInfoClient userInfoClient) {
+  public OAuthProviderAuthenticationFilter(
+      OAuthProviderUserInfoClient userInfoClient, ManualAuthService manualAuthService) {
     this.userInfoClient = userInfoClient;
+    this.manualAuthService = manualAuthService;
   }
 
   @Override
@@ -33,9 +37,13 @@ public class OAuthProviderAuthenticationFilter extends OncePerRequestFilter {
       return;
     }
 
-    AuthenticatedUser user = userInfoClient.resolve(accessToken);
+    boolean manualSessionToken = manualAuthService.isManualSessionToken(accessToken);
+    AuthenticatedUser user = manualAuthService.resolveSession(accessToken);
+    if (user == null && !manualSessionToken) {
+      user = userInfoClient.resolve(accessToken);
+    }
     if (user == null) {
-      response.sendError(HttpStatus.UNAUTHORIZED.value(), "Invalid OAuth access token");
+      response.sendError(HttpStatus.UNAUTHORIZED.value(), "Invalid access token");
       return;
     }
 

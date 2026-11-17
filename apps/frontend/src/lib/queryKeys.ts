@@ -1,5 +1,13 @@
 export const qk = {
   me: () => ['me'] as const,
+  organizations: {
+    all: () => ['organizations'] as const,
+    detail: (organizationId: string) => ['organizations', organizationId] as const,
+    memberships: (organizationId: string) =>
+      ['organizations', organizationId, 'memberships'] as const,
+    invitations: (organizationId: string) =>
+      ['organizations', organizationId, 'invitations'] as const,
+  },
   todos: {
     all: () => ['todos'] as const,
     lists: () => ['todos', 'list'] as const,

@@ -6,6 +6,11 @@ declare module 'next-auth' {
     accessToken?: string;
     provider?: string;
   }
+
+  interface User {
+    accessToken?: string;
+    provider?: string;
+  }
 }
 
 declare module 'next-auth/jwt' {
